@@ -306,9 +306,7 @@ class atomic_multilog {
     size_t record_size = schema_.record_size();
     size_t offset = data_log_.append((const uint8_t*) data, record_size);
 
-    ro_data_ptr ptr;
-    data_log_.ptr(offset, ptr);
-    record_t r = schema_.apply(offset, ptr);
+    record_t r = schema_.apply_unsafe(offset, data);
 
     size_t nfilters = filters_.size();
     for (size_t i = 0; i < nfilters; i++)
