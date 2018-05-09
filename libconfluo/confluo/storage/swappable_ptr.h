@@ -5,9 +5,12 @@
 #include "atomic.h"
 #include "reference_counts.h"
 #include "storage_utils.h"
+#include <mutex>
 
 namespace confluo {
 namespace storage {
+
+static std::mutex mutex;
 
 /**
  * Should be created by a swappable_ptr<T> or by copy
@@ -44,10 +47,10 @@ class read_only_ptr {
       : ptr_(other.ptr_),
         offset_(other.offset_),
         ref_counts_(other.ref_counts_) {
-    if (ref_counts_ != nullptr) {
-      bool uses_first_count = ptr_metadata::get(ptr_)->state_ == state_type::D_IN_MEMORY;
-      uses_first_count ? ref_counts_->increment_first() : ref_counts_->increment_second();
-    }
+//    if (ref_counts_ != nullptr) {
+//      bool uses_first_count = ptr_metadata::get(ptr_)->state_ == state_type::D_IN_MEMORY;
+//      uses_first_count ? ref_counts_->increment_first() : ref_counts_->increment_second();
+//    }
   }
 
   /**
@@ -58,15 +61,15 @@ class read_only_ptr {
   read_only_ptr& operator=(const read_only_ptr<T>& other) {
     // TODO potential infinite loop bug here
     init(other.ptr_, other.offset_, other.ref_counts_);
-    if (ref_counts_ != nullptr) {
-      bool uses_first_count = ptr_metadata::get(ptr_)->state_ == state_type::D_IN_MEMORY;
-      uses_first_count ? ref_counts_->increment_first() : ref_counts_->increment_second();
-    }
+//    if (ref_counts_ != nullptr) {
+//      bool uses_first_count = ptr_metadata::get(ptr_)->state_ == state_type::D_IN_MEMORY;
+//      uses_first_count ? ref_counts_->increment_first() : ref_counts_->increment_second();
+//    }
     return *this;
   }
 
   ~read_only_ptr() {
-    decrement_compare_dealloc();
+//    decrement_compare_dealloc();
   }
 
   /**
@@ -77,7 +80,7 @@ class read_only_ptr {
    * @param ref_counts
    */
   void init(T* ptr, size_t offset = 0, reference_counts* ref_counts = nullptr) {
-    decrement_compare_dealloc();
+//    decrement_compare_dealloc();
     ptr_ = ptr;
     offset_ = offset;
     ref_counts_ = ref_counts;
@@ -182,12 +185,12 @@ class swappable_ptr {
   ~swappable_ptr() {
     T* ptr = atomic::load(&ptr_);
     if (ptr != nullptr) {
-      auto aux = ptr_aux_block::get(ptr_metadata::get(ptr));
-      if (aux.state_ == state_type::D_IN_MEMORY && ref_counts_.decrement_first_and_compare()) {
-        destroy_dealloc(ptr);
-      } else if (aux.state_ == state_type::D_ARCHIVED && ref_counts_.decrement_second_and_compare()) {
-        destroy_dealloc(ptr);
-      }
+//      auto aux = ptr_aux_block::get(ptr_metadata::get(ptr));
+//      if (aux.state_ == state_type::D_IN_MEMORY && ref_counts_.decrement_first_and_compare()) {
+//        destroy_dealloc(ptr);
+//      } else if (aux.state_ == state_type::D_ARCHIVED && ref_counts_.decrement_second_and_compare()) {
+//        destroy_dealloc(ptr);
+//      }
     }
   }
 
@@ -256,12 +259,13 @@ class swappable_ptr {
     // pointer can't be deallocated if there are no copies.
     // Protects against loading before a swap begins and
     // making a copy after the swap finishes.
-    ref_counts_.increment_both();
+//    ref_counts_.increment_both();
+    std::lock_guard<std::mutex> lock(mutex);
     T* ptr = atomic::load(&ptr_);
 
     if (ptr == nullptr) {
       // Decrement both ref counts (no possibility of them reaching 0 here)
-      ref_counts_.decrement_both();
+//      ref_counts_.decrement_both();
       return;
     }
 
@@ -269,12 +273,12 @@ class swappable_ptr {
     auto aux = ptr_aux_block::get(ptr_metadata::get(ptr));
     if (aux.state_ == state_type::D_IN_MEMORY) {
       // decrement other ref count (no possibility of it reaching 0 here)
-      ref_counts_.decrement_second();
+//      ref_counts_.decrement_second();
       copy.init(ptr, offset, &ref_counts_);
       return;
     } else if (aux.state_ == state_type::D_ARCHIVED) {
       // decrement other ref count (no possibility of it reaching 0 here)
-      ref_counts_.decrement_first();
+//      ref_counts_.decrement_first();
       copy.init(ptr, offset, &ref_counts_);
       return;
     } else {
@@ -290,7 +294,6 @@ class swappable_ptr {
     lifecycle_util<T>::destroy(ptr);
     ALLOCATOR.dealloc(ptr);
   }
-
   mutable reference_counts ref_counts_; // mutable reference counts for logically const functions
   atomic::type<T*> ptr_;
 };
