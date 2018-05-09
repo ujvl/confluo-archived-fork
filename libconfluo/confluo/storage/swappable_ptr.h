@@ -5,7 +5,7 @@
 #include "atomic.h"
 #include "reference_counts.h"
 #include "storage_utils.h"
-#include "mutex.h"
+#include <mutex>
 
 namespace confluo {
 namespace storage {
