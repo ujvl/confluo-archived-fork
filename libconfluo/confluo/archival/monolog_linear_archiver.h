@@ -82,22 +82,21 @@ class monolog_linear_archiver : public archiver {
    * @param bucket bucket to archive
    */
   void archive_bucket(T* bucket) {
-    LOG_INFO << "1";
     auto metadata = ptr_metadata::get(bucket);
     auto encoded_bucket = confluo_encoder::encode(bucket, metadata->data_size_,
                                           archival_configuration_params::DATA_LOG_ENCODING_TYPE);
     size_t enc_size = encoded_bucket.size();
     auto off = writer_.append<ptr_metadata, uint8_t>(metadata, 1, encoded_bucket.get(), enc_size);
-    LOG_INFO << "2";
 
     auto action = monolog_linear_archival_action(archival_tail_ + BUCKET_SIZE);
     writer_.commit<monolog_linear_archival_action>(action);
 
-    LOG_INFO << "3";
     ptr_aux_block aux(state_type::D_ARCHIVED, archival_configuration_params::DATA_LOG_ENCODING_TYPE);
+    LOG_INFO << "3";
     void* archived_bucket = ALLOCATOR.mmap(off.path(), off.offset(), enc_size, aux);
+    LOG_INFO << "4: " << archived_bucket;
     log_->data()[archival_tail_ / BUCKET_SIZE].swap_ptr(encoded_ptr<T>(archived_bucket));
-    LOG_INFO << "4";
+    LOG_INFO << "5";
   }
 
   incremental_file_writer writer_;
