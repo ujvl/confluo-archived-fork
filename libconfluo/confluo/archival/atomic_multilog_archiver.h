@@ -57,13 +57,19 @@ class atomic_multilog_archiver {
     std::ofstream test("archival_out");
     LOG_INFO << offset << " " << data_log_archiver_.tail();
     if (offset > data_log_archiver_.tail()) {
+      LOG_INFO << "i am here";
       uint64_t a = time_utils::cur_ns();
+      LOG_INFO << "i am here2";
       data_log_archiver_.archive(offset);
+      LOG_INFO << "i am here3";
       uint64_t b = time_utils::cur_ns();
       filter_log_archiver_.archive(offset);
+      LOG_INFO << "i am here4";
       uint64_t c = time_utils::cur_ns();
       index_log_archiver_.archive(offset);
+      LOG_INFO << "i am here5";
       uint64_t d = time_utils::cur_ns();
+      LOG_INFO << (b - a);
       std::cerr << "Data log archival: " << (b - a) << "\n";
       std::cout << "Data log archival: " << (b - a) << "\n";
       std::cerr << "Filter log archival: " << (c - b) << "\n";
