@@ -52,10 +52,7 @@ class atomic_multilog_archiver {
    */
   void archive(size_t offset) {
     offset = std::min(offset - offset % record_size_, (size_t) rt_.get());
-    std::cerr << "Begining archival\n";
-    std::cout << "Begining archival\n";
     std::ofstream test("archival_out");
-    LOG_INFO << offset << " " << data_log_archiver_.tail();
     if (offset > data_log_archiver_.tail()) {
       LOG_INFO << "i am here";
       uint64_t a = time_utils::cur_ns();

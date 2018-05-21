@@ -48,9 +48,11 @@ class monolog_linear_archiver : public archiver {
    */
   void archive(size_t offset) {
     writer_.open();
+    LOG_INFO << "sup";
     // TODO replace with bucket iterator later
     storage::read_only_encoded_ptr<T> bucket_ptr;
     while (archival_tail_ < offset) {
+      LOG_INFO << archival_tail_ << " " << offset;
       log_->ptr(archival_tail_, bucket_ptr);
       T* data = bucket_ptr.get().template ptr_as<T>();
       auto aux = ptr_aux_block::get(ptr_metadata::get(data));
