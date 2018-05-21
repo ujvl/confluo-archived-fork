@@ -111,9 +111,7 @@ class storage_allocator {
     mmap_stat_.increment(mmap_size);
 
     int fd = file_utils::open_file(path, O_RDWR);
-    LOG_INFO << "fd: " << fd;
     uint8_t* ptr = static_cast<uint8_t*>(mmap_utils::map(fd, nullptr, page_aligned_offset, mmap_size));
-    LOG_INFO << "ptr: " << reinterpret_cast<void*>(ptr);
     file_utils::close_file(fd);
 
     ptr += mmap_delta;
