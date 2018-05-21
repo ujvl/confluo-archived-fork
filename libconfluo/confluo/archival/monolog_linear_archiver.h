@@ -89,7 +89,6 @@ class monolog_linear_archiver : public archiver {
     writer_.commit<monolog_linear_archival_action>(action);
 
     ptr_aux_block aux(state_type::D_ARCHIVED, archival_configuration_params::DATA_LOG_ENCODING_TYPE);
-    LOG_INFO << " " << off.path() << " " << off.offset() << " " << enc_size;
     void* archived_bucket = ALLOCATOR.mmap(off.path(), off.offset(), enc_size, aux);
     log_->data()[archival_tail_ / BUCKET_SIZE].swap_ptr(encoded_ptr<T>(archived_bucket));
   }

@@ -60,10 +60,9 @@ class atomic_multilog_archiver {
       uint64_t c = time_utils::cur_ns();
       index_log_archiver_.archive(offset);
       uint64_t d = time_utils::cur_ns();
-      LOG_INFO << (b - a);
-      std::cerr << "Data log archival: " << (b - a) << "\n";
-      std::cerr << "Filter log archival: " << (c - b) << "\n";
-      std::cerr << "Index log archival: " << (d - c) << "\n";
+      LOG_INFO << "Data log archival: " << (b - a);
+      LOG_INFO << "Filter log archival: " << (c - b);
+      LOG_INFO << "Index log archival: " << (d - c);
     }
   }
 
