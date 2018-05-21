@@ -48,11 +48,9 @@ class monolog_linear_archiver : public archiver {
    */
   void archive(size_t offset) {
     writer_.open();
-    LOG_INFO << "sup";
     // TODO replace with bucket iterator later
     storage::read_only_encoded_ptr<T> bucket_ptr;
     while (archival_tail_ < offset) {
-      LOG_INFO << archival_tail_ << " " << offset;
       log_->ptr(archival_tail_, bucket_ptr);
       T* data = bucket_ptr.get().template ptr_as<T>();
       auto aux = ptr_aux_block::get(ptr_metadata::get(data));
@@ -63,12 +61,10 @@ class monolog_linear_archiver : public archiver {
       if (log_->size() - archival_tail_ < BUCKET_SIZE) {
         break;
       }
-      LOG_INFO << "archiving bucket";
       archive_bucket(data);
       archival_tail_ += BUCKET_SIZE;
     }
     writer_.close();
-    LOG_INFO << "done";
   }
 
   size_t tail() {
@@ -85,6 +81,7 @@ class monolog_linear_archiver : public archiver {
     auto metadata = ptr_metadata::get(bucket);
     auto encoded_bucket = confluo_encoder::encode(bucket, metadata->data_size_,
                                           archival_configuration_params::DATA_LOG_ENCODING_TYPE);
+    LOG_INFO << unsigned(archival_configuration_params::DATA_LOG_ENCODING_TYPE);
     size_t enc_size = encoded_bucket.size();
     auto off = writer_.append<ptr_metadata, uint8_t>(metadata, 1, encoded_bucket.get(), enc_size);
 
@@ -92,11 +89,9 @@ class monolog_linear_archiver : public archiver {
     writer_.commit<monolog_linear_archival_action>(action);
 
     ptr_aux_block aux(state_type::D_ARCHIVED, archival_configuration_params::DATA_LOG_ENCODING_TYPE);
-    LOG_INFO << "3";
+    LOG_INFO << " " << off.path() << " " << off.offset() << " " << enc_size;
     void* archived_bucket = ALLOCATOR.mmap(off.path(), off.offset(), enc_size, aux);
-    LOG_INFO << "4: " << archived_bucket;
     log_->data()[archival_tail_ / BUCKET_SIZE].swap_ptr(encoded_ptr<T>(archived_bucket));
-    LOG_INFO << "5";
   }
 
   incremental_file_writer writer_;
