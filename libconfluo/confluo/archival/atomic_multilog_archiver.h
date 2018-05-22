@@ -53,16 +53,24 @@ class atomic_multilog_archiver {
   void archive(size_t offset) {
     offset = std::min(offset - offset % record_size_, (size_t) rt_.get());
     if (offset > data_log_archiver_.tail()) {
+
+      LOG_INFO << "Archiving data log...";
       uint64_t a = time_utils::cur_ns();
       data_log_archiver_.archive(offset);
       uint64_t b = time_utils::cur_ns();
+
+      LOG_INFO << "Archiving filters...";
+      uint64_t b1 = time_utils::cur_ns();
       filter_log_archiver_.archive(offset);
       uint64_t c = time_utils::cur_ns();
+
+      LOG_INFO << "Archiving indexes...";
+      uint64_t c1 = time_utils::cur_ns();
       index_log_archiver_.archive(offset);
       uint64_t d = time_utils::cur_ns();
       LOG_INFO << "Data log archival: " << (b - a);
-      LOG_INFO << "Filter log archival: " << (c - b);
-      LOG_INFO << "Index log archival: " << (d - c);
+      LOG_INFO << "Filter log archival: " << (c - b1);
+      LOG_INFO << "Index log archival: " << (d - c1);
     }
   }
 
